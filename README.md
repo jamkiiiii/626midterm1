@@ -16,11 +16,11 @@ The data files used are 'training_data.txt' and 'test_data.txt'.
 For both binary and multi-class classification, SVM performs better than the Random Forest algorithm for this project.
 The following are the accuracies for each classification :
 1. Binary Classification : 
-Random Forest : accuracy = 
-SVM : accuracy = 
+Random Forest : accuracy = 0.99996
+SVM : accuracy = 0.9991349
 2. Multi-Class Classification
-3. 1. Binary Classification : accuracy = 
-4. Random Forest : accuracy = 
+Random Forest : accuracy = 0.9793
+SVM : accuracy = 0.9741379
 
 
 # Conclusion
