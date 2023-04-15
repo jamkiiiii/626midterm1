@@ -1,0 +1,144 @@
+---
+title: "Midterm 626"
+output: html_document
+date: "2023-03-20"
+---
+## 1~3 dynamic. 4~12 static
+## 1 is dynamic and 0 is static
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+train_data <- read.table("/Users/jamieki/Downloads/training_data.txt", header = F)
+test_data <- read.table("/Users/jamieki/Downloads/test_data.txt")
+
+names(train_data) <- train_data[1, ]
+names(test_data) <- test_data[1, ]
+# delete first row
+train_data <- train_data[-1, ]
+test_data <- test_data[-1, ]
+
+train_data[] = sapply(train_data, as.numeric)
+test_data[] = sapply(test_data, as.numeric)
+
+results <- ifelse(train_data$activity %in% 1:3, 1, 0)
+
+head(train_data)
+train_data$results = results
+
+
+```
+
+### (1). Build a binary classifier to classify the activity of each time window into static (0) and dynamic (1)
+
+
+
+
+```{r}
+sample = sample(c(TRUE, FALSE), nrow(train_data), replace = TRUE, 
+                 prob = c(0.7, 0.3))
+train_sub = train_data[sample, ]
+test_sub = train_data[!sample, ]
+```
+
+### Random Forest
+
+
+```{r}
+library(randomForest)
+library(datasets)
+library(caret)
+library(ggplot2)
+library(lattice)
+
+rf <- randomForest(
+  as.factor(results) ~ .,
+  data=train_sub[, 3:564]
+)
+
+rf
+
+pred = predict(rf, newdata = test_sub[, 3:564])
+confusionMatrix(table(pred, as.factor(test_sub[,3:564]$results)))
+
+
+```
+
+
+### (2). Build a refined multi-class classifier to classify walking (1), walking_upstairs (2), walking_downstairs (3), sitting (4), standing (5), lying (6), and static postural transition (7)
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+
+train_data <- read.table("/Users/jamieki/Downloads/training_data.txt", header = F)
+test_data <- read.table("/Users/jamieki/Downloads/test_data.txt")
+
+names(train_data) <- train_data[1, ]
+names(test_data) <- test_data[1, ]
+# delete first row
+train_data <- train_data[-1, ]
+test_data <- test_data[-1, ]
+
+train_data[] = sapply(train_data, as.numeric)
+test_data[] = sapply(test_data, as.numeric)
+
+
+
+```
+
+
+
+
+```{r}
+
+library(randomForest)
+library(datasets)
+library(caret)
+library(ggplot2)
+library(lattice)
+# now, 7 and above are all static
+train_data$activity[train_data$activity >= 7 & train_data$activity <= 12] <- 7
+
+sample = sample(c(TRUE, FALSE), nrow(train_data), replace = TRUE, 
+                 prob = c(0.7, 0.3))
+train_sub = train_data[sample, ]
+test_sub = train_data[!sample, ]
+
+
+rf2 <- randomForest(
+  as.factor(train_sub$activity) ~ .,
+  data=train_sub[, 3:563],
+  importance = TRUE,
+  proximity = TRUE
+)
+
+rf2
+
+
+pred = predict(rf2, newdata = test_sub)
+confusionMatrix(table(pred, as.factor(test_sub$activity)))
+
+
+
+
+
+```
+
+
+
+```{r}
+pred_final = predict(rf, newdata = test_data, type = "class")
+write.table(pred_final, "/Users/jamieki/Desktop/binary_hihi.txt", 
+            row.names = FALSE, quote = FALSE)
+
+```
+
+```{r}
+pred_final2 = predict(rf2, newdata = test_data, type = "class")
+write.table(pred_final2, "/Users/jamieki/Desktop/multiclass_hihi.txt", 
+            row.names = FALSE, quote = FALSE)
+
+```
+
+
+
