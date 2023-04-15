@@ -1,0 +1,116 @@
+---
+title: "SVM for 626"
+output: html_document
+date: "2023-04-07"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+train_data <- read.table("/Users/jamieki/Downloads/training_data.txt", header = F)
+test_data <- read.table("/Users/jamieki/Downloads/test_data.txt")
+
+names(train_data) <- train_data[1, ]
+names(test_data) <- test_data[1, ]
+# delete first row
+train_data <- train_data[-1, ]
+test_data <- test_data[-1, ]
+
+train_data[] = sapply(train_data, as.numeric)
+test_data[] = sapply(test_data, as.numeric)
+
+results <- ifelse(train_data$activity %in% 1:3, 1, 0)
+
+head(train_data)
+train_data$results = results
+
+sample = sample(c(TRUE, FALSE), nrow(train_data), replace = TRUE, 
+                 prob = c(0.7, 0.3))
+train_sub = train_data[sample, ]
+test_sub = train_data[!sample, ]
+```
+
+### (1). Build a binary classifier to classify the activity of each time window into static (0) and dynamic (1)
+
+
+### SVM
+Binary classifier
+```{r}
+library(e1071)
+model1 <- svm(as.factor(results) ~ ., data = train_sub[, 3:564])
+
+# Predict the class of the test data
+predictions <- predict(model1, test_sub)
+
+# Check the accuracy of the predictions
+accuracy <- mean(predictions == test_sub$results)
+cat("Accuracy:", accuracy)
+```
+
+
+### (2). Build a refined multi-class classifier to classify walking (1), walking_upstairs (2), walking_downstairs (3), sitting (4), standing (5), lying (6), and static postural transition (7)
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+
+train_data <- read.table("/Users/jamieki/Downloads/training_data.txt", header = F)
+test_data <- read.table("/Users/jamieki/Downloads/test_data.txt")
+
+names(train_data) <- train_data[1, ]
+names(test_data) <- test_data[1, ]
+# delete first row
+train_data <- train_data[-1, ]
+test_data <- test_data[-1, ]
+
+train_data[] = sapply(train_data, as.numeric)
+test_data[] = sapply(test_data, as.numeric)
+
+# now, 7 and above are all static
+train_data$activity[train_data$activity >= 7 & train_data$activity <= 12] <- 7
+
+sample = sample(c(TRUE, FALSE), nrow(train_data), replace = TRUE, 
+                 prob = c(0.7, 0.3))
+train_sub = train_data[sample, ]
+test_sub = train_data[!sample, ]
+
+
+```
+
+
+Multi-Class Classification
+```{r}
+# Load the required library for SVM
+library(e1071)
+
+# Create a model using SVM
+model2 <- svm(as.factor(train_sub$activity) ~ ., data = train_sub[, 3:563])
+
+# Predict the class of the test data
+predictions <- predict(model2, test_sub)
+
+# Check the accuracy of the predictions
+accuracy <- mean(predictions == test_sub$activity)
+cat("Accuracy:", accuracy)
+
+
+
+```
+
+
+
+```{r}
+pred_final = predict(model1, newdata = test_data, type = "class")
+write.table(pred_final, "/Users/jamieki/Desktop/binary_new3.txt", 
+            row.names = FALSE, quote = FALSE)
+
+```
+
+```{r}
+pred_final2 = predict(model2, newdata = test_data, type = "class")
+write.table(pred_final2, "/Users/jamieki/Desktop/multiclass_new3.txt", 
+            row.names = FALSE, quote = FALSE)
+
+```
+
+
+
